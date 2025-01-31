@@ -14,7 +14,6 @@ data class Comment(
 
 
 object CreatNotes {
-    val listComment: MutableList<Comment> = mutableListOf()
     private var listNotes: MutableMap<Int, Notes> = mutableMapOf()
     private var count = 0
 
@@ -40,8 +39,10 @@ object CreatNotes {
         var result = 1
         listNotes.forEach { it ->
             it.value.listComment.forEach {
-                if (idComment == it.idComment && it.active){ it.text = text
-                it.active = status} else result = 0
+                if (idComment == it.idComment) {
+                    it.text = text
+                    it.active = status
+                } else result = 0
             }
         }
         return if (result == 1) result else throw NotFoundException("Комментарий не найден")
@@ -49,9 +50,19 @@ object CreatNotes {
 
     fun getById(idNotes: Int) = listNotes[idNotes]
 
-    fun getComments(idNotes: Int)= listNotes[idNotes]?.listComment?.filter { it.active }
+    fun getComments(idNotes: Int) = listNotes[idNotes]?.listComment?.filter { it.active }
 
-    fun deleteComment(idComment: Int, status: Boolean = false) = editComment(idComment, text = "",status)
+    fun deleteComment(idComment: Int, status: Boolean = false): Int {
+        var result = 1
+        listNotes.forEach { it ->
+            it.value.listComment.forEach {
+                if (idComment == it.idComment) {
+                    it.active = status
+                } else result = 0
+            }
+        }
+        return if (result == 1) result else throw NotFoundException("Комментарий не найден")
+    }
 
     fun restoreComment(idComment: Int) = deleteComment(idComment, true)
 
