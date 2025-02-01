@@ -8,75 +8,72 @@ import java.io.PrintStream
 import kotlin.test.assertContains
 
 class CreatNotesTest {
-    private var output: ByteArrayOutputStream? = ByteArrayOutputStream()
 
     @Before
     fun clearBeforeTest() {
         CreatNotes.clear()
-        System.setOut(output?.let { PrintStream(it) })
     }
 
     @Test
     fun add() {
         CreatNotes.add(Notes("Проверка связи"))
-        assertEquals("Проверка связи", CreatNotes.getById(0)?.title ?: NotFoundException("Нет заметки") )
+        assertTrue( CreatNotes.get().isNotEmpty())
     }
 
     @Test
     fun get() {
         CreatNotes.add(Notes("Проверка связи"))
-        CreatNotes.get()
-        assertTrue(output.toString().isNotEmpty())
+        assertTrue( CreatNotes.get().isNotEmpty())
     }
 
     @Test
     fun edit() {
         CreatNotes.add(Notes("Проверка связи"))
-        CreatNotes.edit(0,"Изменил","text")
-        assertEquals("Изменил", CreatNotes.getById(0)?.title ?: NotFoundException("Нет заметки") )
+        CreatNotes.edit(1,"Изменил","Изменил")
+        assertEquals("Изменил", CreatNotes.getById(1).keys.last().text)
     }
 
     @Test
     fun creatComment() {
         CreatNotes.add(Notes("Проверка связи"))
-        CreatNotes.creatComment(0,"Comment")
-        assertEquals("Comment", CreatNotes.getById(0)?.listComment?.get(0)?.text ?: NotFoundException("Нет Заметки") )
+        CreatNotes.creatComment(1,"Comment")
+        assertEquals("Comment",CreatNotes.get().values.last().last().text)
     }
 
     @Test
     fun editComment() {
         CreatNotes.add(Notes("Проверка связи"))
-        CreatNotes.creatComment(0,"Comment")
+        CreatNotes.creatComment(1,"Comment")
         CreatNotes.editComment(1,"Изменил")
-        assertEquals("Изменил", CreatNotes.getById(0)?.listComment?.get(0)?.text ?: NotFoundException("Нет Заметки") )
+        assertEquals("Изменил",CreatNotes.get().values.last().last().text )
 
     }
 
     @Test
     fun getById() {
         CreatNotes.add(Notes("Проверка связи"))
-        CreatNotes.getById(0)?.text?.let { assertTrue(it.isNotEmpty()) }
+        assertTrue(CreatNotes.getById(1).isNotEmpty())
     }
 
     @Test
     fun getComments() {
         CreatNotes.add(Notes("Проверка связи"))
        CreatNotes.creatComment(0,"Comment")
-        val comment = CreatNotes.getComments(0)
-        comment?.let { assertTrue(it.isNotEmpty()) }
+        val comment = CreatNotes.getComments(1)
+        assertTrue(comment.isNotEmpty())
     }
 
     @Test
     fun deleteComment() {
         CreatNotes.add(Notes("Проверка связи"))
-        CreatNotes.creatComment(0,"Comment")
+        CreatNotes.creatComment(1,"Comment")
         assertEquals(1,CreatNotes.deleteComment(1))
     }
 
     @Test
     fun restoreComment() {
         CreatNotes.add(Notes("Проверка связи"))
-        CreatNotes.creatComment(0,"Comment")
+        CreatNotes.creatComment(1,"Comment")
         assertEquals(1,CreatNotes.restoreComment(1))
     }
 
@@ -84,6 +81,7 @@ class CreatNotesTest {
     fun shouldThrow() {
         CreatNotes.add(Notes("Проверка связи"))
         CreatNotes.creatComment(1,"Comment")
+        CreatNotes.editComment(0,"Comment")
     }
 
     @After

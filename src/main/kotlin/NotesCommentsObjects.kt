@@ -1,9 +1,9 @@
 import exception.NotFoundException
 
-data class Notes(
-    val title: String = "",
-    val text: String = "text",
-    val listComment: MutableList<Comment> = mutableListOf()
+class Notes(
+    var title: String = "",
+    var text: String = "text",
+    val idNotes: Int = 0
 )
 
 data class Comment(
@@ -14,49 +14,77 @@ data class Comment(
 
 
 object CreatNotes {
-    val listComment: MutableList<Comment> = mutableListOf()
-    private var listNotes: MutableMap<Int, Notes> = mutableMapOf()
-    private var count = 0
+    private var listNotes: MutableMap<Notes, MutableList<Comment>> = mutableMapOf()
+    private var actualList: MutableMap<Notes, List<Comment>> = mutableMapOf()
+    private var count = 1
+    private var countComment = 1
 
     fun add(notes: Notes) {
-        listNotes[count++] = notes
+        listNotes[Notes(idNotes = count++, title = notes.title, text = notes.text)] = mutableListOf()
     }
 
-    fun get() {
-        listNotes.forEach { println(it) }
+    fun get(): MutableMap<Notes, List<Comment>> {
+        listNotes.forEach { entry ->
+            actualList[entry.key] = entry.value.filter { it.active }
+        }
+        return actualList
     }
 
-    fun edit(idNotes: Int, title: String = "notes$idNotes", text: String) {
-        listNotes[idNotes] =
-            listNotes[idNotes]?.copy(title = title, text = text) ?: throw NotFoundException("Нет заметки")
-    }
-
-    fun creatComment(idNotes: Int, text: String) {
-        listNotes[idNotes]?.listComment?.add(Comment(text = text, idComment = count++))
-            ?: throw NotFoundException("Нет заметки")
-    }
-
-    fun editComment(idComment: Int, text: String, status: Boolean = true): Int {
-        var result = 1
-        listNotes.forEach { it ->
-            it.value.listComment.forEach {
-                if (idComment == it.idComment && it.active){ it.text = text
-                it.active = status} else result = 0
+    fun edit(idNotes: Int, title: String = "notes$idNotes", text: String): Int {
+        listNotes.keys.forEach {
+            if ((it).idNotes == idNotes) {
+                it.text = text
+                it.title = title
+                return 1
             }
         }
-        return if (result == 1) result else throw NotFoundException("Комментарий не найден")
+        return 0
     }
 
-    fun getById(idNotes: Int) = listNotes[idNotes]
+    fun creatComment(idNotes: Int, text: String): String {
+        listNotes.forEach {
+            if (it.key.idNotes == idNotes) {
+                it.value.add(Comment(countComment++, text))
+                return "ид Комментария $countComment $idNotes заметки"
+            }
+        }
+        return "Нет таковой заметки"
+    }
 
-    fun getComments(idNotes: Int)= listNotes[idNotes]?.listComment?.filter { it.active }
+    fun editComment(idComment: Int, text: String): Int {
+        (listNotes).values.forEach { it ->
+            it.forEach {
+                if (it.idComment == idComment && it.active) {
+                    it.text = text
+                    return 1
+                }
+            }
+        }
+        return throw NotFoundException("Коммент не найден")
+    }
 
-    fun deleteComment(idComment: Int, status: Boolean = false) = editComment(idComment, text = "",status)
+    fun deleteComment(idComment: Int, active: Boolean = false): Int {
+        listNotes.values.forEach { it ->
+            it.forEach {
+                if (it.idComment == idComment) {
+                    it.active = active
+                    return 1
+                }
+            }
+        }
+        return 0
+    }
 
     fun restoreComment(idComment: Int) = deleteComment(idComment, true)
 
+    fun getComments(idNotes: Int) = get().filterKeys { it.idNotes == idNotes }.values
+
+    fun getById(idNotes: Int) = get().filter { it.key.idNotes == idNotes }
+
     fun clear() {
         listNotes = mutableMapOf()
-        count = 0
+        actualList = mutableMapOf()
+        count = 1
+        countComment = 1
     }
 }
